@@ -1,24 +1,30 @@
 #!/usr/bin/env node
 
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { homedir } from 'node:os';
-import { dirname, join } from 'node:path';
 import { handlePromptSubmit } from '../lib/tf.mjs';
+import {
+  commandFilePath,
+  hasTokenFitHook,
+  installClaudeCode,
+  readClaudeSettings,
+  settingsPath,
+  uninstallClaudeCode
+} from '../lib/install.mjs';
 import { createTokenFitServer } from '../server.mjs';
 
 const DEFAULT_PORT = Number(process.env.TOKENFIT_PORT || process.env.PORT || 4317);
 const DEFAULT_URL = process.env.TOKENFIT_URL || `http://127.0.0.1:${DEFAULT_PORT}`;
-const HOOK_TIMEOUT_MS = Number(process.env.TOKENFIT_HOOK_TIMEOUT_MS || 450);
+const HOOK_TIMEOUT_MS = Number(process.env.TOKENFIT_HOOK_TIMEOUT_MS || 900);
 
 function help() {
-  console.log(`TokenFit
+  console.log(`TokenFit — Your AI thinks. You rep.
 
 Usage:
-  tokenfit start
-  tokenfit hook
-  tokenfit status
-  tokenfit doctor
+  tokenfit init                 install the Claude Code hook and explain the rest
+  tokenfit start                run the daemon + dashboard on 127.0.0.1:${DEFAULT_PORT}
+  tokenfit status               print stats from the running daemon
+  tokenfit doctor               check node, daemon, hook, and /tf command
+  tokenfit hook                 (used by the Claude Code hook)
   tokenfit install claude-code [--yes]
   tokenfit uninstall claude-code [--yes]
 `);
@@ -77,147 +83,38 @@ async function status() {
   console.log(JSON.stringify(state.stats, null, 2));
 }
 
-function settingsPath() {
-  return join(homedir(), '.claude', 'settings.json');
-}
-
-function commandFilePath() {
-  return join(homedir(), '.claude', 'commands', 'tf.md');
-}
-
-const TF_COMMAND_MD = `---
-description: TokenFit — log reps, view stats, share
-argument-hint: done | skip | how | stats | web | x | on | off | lang
----
-
-TokenFit's UserPromptSubmit hook normally intercepts /tf before it ever reaches you.
-If you are reading this, the hook is missing or disabled, so act as the fallback.
-The local TokenFit API lives at http://127.0.0.1:4317.
-
-The user typed: /tf $ARGUMENTS
-
-- done → POST /api/done with body {}
-- skip → POST /api/skip with body {}
-- how → GET /api/state and list the current exercise's steps
-- on / off → POST /api/settings with {"paused": false} / {"paused": true}
-- lang en|ja (or bare ja|en) → POST /api/settings with {"lang": "..."}
-- (empty) or stats → GET /api/state and summarize stats in one line
-- web → open http://127.0.0.1:4317 in the default browser
-- x → GET /api/state, then open https://twitter.com/intent/tweet?text=<url-encoded brag with stats.totalReps and #TokenFit>
-
-Use curl (and \`open\` on macOS). If the API is unreachable, tell the user to run \`tokenfit start\`.
-Reply with a single short line about what happened.
-`;
-
-async function writeCommandFile() {
-  await mkdir(dirname(commandFilePath()), { recursive: true });
-  await writeFile(commandFilePath(), TF_COMMAND_MD, 'utf8');
-}
-
-async function readClaudeSettings() {
-  const path = settingsPath();
-  if (!existsSync(path)) {
-    return {};
+async function daemonRunning() {
+  try {
+    const response = await fetch(`${DEFAULT_URL}/api/state`);
+    return response.ok;
+  } catch {
+    return false;
   }
-  const raw = await readFile(path, 'utf8');
-  return raw.trim() ? JSON.parse(raw) : {};
 }
 
-function hookCommand() {
-  return 'tokenfit hook';
-}
-
-function hasTokenFitHook(settings) {
-  return JSON.stringify(settings.hooks || {}).includes(hookCommand());
-}
-
-function addClaudeHook(settings) {
-  settings.hooks ||= {};
-  settings.hooks.UserPromptSubmit ||= [];
-
-  if (!hasTokenFitHook(settings)) {
-    settings.hooks.UserPromptSubmit.push({
-      matcher: '',
-      hooks: [
-        {
-          type: 'command',
-          command: hookCommand()
-        }
-      ]
-    });
-  }
-
-  return settings;
-}
-
-function removeClaudeHook(settings) {
-  const entries = settings.hooks?.UserPromptSubmit;
-  if (!Array.isArray(entries)) {
-    return settings;
-  }
-
-  settings.hooks.UserPromptSubmit = entries
-    .map((entry) => ({
-      ...entry,
-      hooks: Array.isArray(entry.hooks)
-        ? entry.hooks.filter((hook) => hook.command !== hookCommand())
-        : entry.hooks
-    }))
-    .filter((entry) => !Array.isArray(entry.hooks) || entry.hooks.length > 0);
-
-  return settings;
-}
-
-async function writeClaudeSettings(settings) {
-  const path = settingsPath();
-  await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, `${JSON.stringify(settings, null, 2)}\n`, 'utf8');
-}
-
-async function installClaudeCode({ yes = false } = {}) {
-  const path = settingsPath();
-  const settings = addClaudeHook(await readClaudeSettings());
-
-  if (!yes) {
-    console.log(`Ready to add this hook to ${path}:`);
-    console.log(JSON.stringify(addClaudeHook(await readClaudeSettings()).hooks.UserPromptSubmit.at(-1), null, 2));
-    console.log(`Also writes the /tf slash command to ${commandFilePath()}.`);
-    console.log('Run again with --yes to write the files.');
+async function init() {
+  if (process.argv[1]?.includes('_npx')) {
+    console.log('Heads up: you are running from the npx cache, which gets pruned.');
+    console.log('For a hook that survives, install globally first: npm install -g @mizkun/tokenfit');
     return;
   }
 
-  await writeClaudeSettings(settings);
-  await writeCommandFile();
-  console.log(`Installed Claude Code hook in ${path}`);
-  console.log(`Installed /tf command in ${commandFilePath()}`);
-}
+  await installClaudeCode({ yes: true });
+  console.log('');
 
-async function uninstallClaudeCode({ yes = false } = {}) {
-  const path = settingsPath();
-  const settings = removeClaudeHook(await readClaudeSettings());
-
-  if (!yes) {
-    console.log(`Ready to remove TokenFit hooks from ${path} and ${commandFilePath()}.`);
-    console.log('Run again with --yes to write the files.');
-    return;
+  if (await daemonRunning()) {
+    console.log(`Daemon: already running at ${DEFAULT_URL}`);
+  } else {
+    console.log(`Daemon: not running. Start it with: tokenfit start`);
   }
-
-  await writeClaudeSettings(settings);
-  await rm(commandFilePath(), { force: true });
-  console.log(`Removed TokenFit Claude Code hook from ${path}`);
+  console.log('Then send any prompt in Claude Code. Your AI thinks. You rep.');
 }
 
 async function doctor() {
   const checks = [];
   checks.push(['node', process.versions.node]);
   checks.push(['settings', existsSync(settingsPath()) ? settingsPath() : 'not found']);
-
-  try {
-    const response = await fetch(`${DEFAULT_URL}/api/state`);
-    checks.push(['daemon', response.ok ? 'running' : `http ${response.status}`]);
-  } catch {
-    checks.push(['daemon', 'not running']);
-  }
+  checks.push(['daemon', (await daemonRunning()) ? 'running' : 'not running']);
 
   try {
     const settings = await readClaudeSettings();
@@ -239,6 +136,8 @@ const yes = rest.includes('--yes');
 try {
   if (!command || command === 'help' || command === '--help' || command === '-h') {
     help();
+  } else if (command === 'init') {
+    await init();
   } else if (command === 'start') {
     await start();
   } else if (command === 'hook') {

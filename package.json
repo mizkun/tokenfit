@@ -1,13 +1,33 @@
 {
-  "name": "tokenfit",
-  "version": "0.1.0",
-  "private": true,
+  "name": "@mizkun/tokenfit",
+  "version": "0.2.0",
   "type": "module",
-  "description": "Your AI thinks. You rep.",
+  "description": "Your AI thinks. You rep. The dumbest local fitness tracker for people who wait for AI agents.",
   "license": "MIT",
+  "author": "Kyohei Mizutani (https://github.com/mizkun)",
   "repository": "github:mizkun/tokenfit",
+  "homepage": "https://token-fit-cdad0.web.app",
+  "bugs": "https://github.com/mizkun/tokenfit/issues",
+  "keywords": [
+    "claude-code",
+    "hooks",
+    "fitness",
+    "joke",
+    "desk-exercise",
+    "developer-tools"
+  ],
   "bin": {
     "tokenfit": "./bin/tokenfit.mjs"
+  },
+  "files": [
+    "bin",
+    "lib",
+    "scripts",
+    "public",
+    "server.mjs"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
     "start": "node server.mjs",

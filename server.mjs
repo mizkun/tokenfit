@@ -1,12 +1,17 @@
 import http from 'node:http';
-import { createReadStream, existsSync } from 'node:fs';
+import { createReadStream, existsSync, statSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import { dirname, extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DEFAULT_PORT = Number(process.env.TOKENFIT_PORT || process.env.PORT || 4317);
-const DEFAULT_DATA_FILE = process.env.TOKENFIT_DATA_FILE || join(__dirname, 'data', 'tokenfit.json');
+// A git clone keeps its data next to the code; an npm install must not
+// write into node_modules, so it lives in ~/.tokenfit instead.
+const LOCAL_DATA_FILE = join(__dirname, 'data', 'tokenfit.json');
+const DEFAULT_DATA_FILE = process.env.TOKENFIT_DATA_FILE
+  || (existsSync(LOCAL_DATA_FILE) ? LOCAL_DATA_FILE : join(homedir(), '.tokenfit', 'tokenfit.json'));
 const DEFAULT_PUBLIC_DIR = join(__dirname, 'public');
 
 const MIME_TYPES = new Map([
@@ -239,7 +244,7 @@ function serveStatic(publicDir, request, response) {
   }
 
   const filePath = join(publicDir, relativePath);
-  if (!existsSync(filePath)) {
+  if (!existsSync(filePath) || !statSync(filePath).isFile()) {
     sendNotFound(response);
     return;
   }
@@ -248,7 +253,9 @@ function serveStatic(publicDir, request, response) {
     'content-type': MIME_TYPES.get(extname(filePath)) || 'application/octet-stream',
     'cache-control': 'no-cache'
   });
-  createReadStream(filePath).pipe(response);
+  const stream = createReadStream(filePath);
+  stream.on('error', () => response.end());
+  stream.pipe(response);
 }
 
 export function createTokenFitServer({
@@ -260,8 +267,9 @@ export function createTokenFitServer({
   let writeQueue = Promise.resolve();
 
   const persist = (state) => {
-    writeQueue = writeQueue.then(() => writeState(dataFile, state));
-    return writeQueue;
+    const attempt = writeQueue.then(() => writeState(dataFile, state));
+    writeQueue = attempt.catch(() => {});
+    return attempt;
   };
 
   const broadcast = (state) => {

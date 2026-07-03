@@ -448,13 +448,10 @@
       <h2 id="install" style="position: relative;">Install</h2>
       <div class="install">
         <span class="soon">npm release coming soon</span>
-        <pre><span class="d"># the intended one-liner</span>
-npx tokenfit@latest init
-
-<span class="d"># until then, from source</span>
-git clone https://github.com/mizkun/tokenfit.git
-cd tokenfit &amp;&amp; npm start
-node ./bin/tokenfit.mjs install claude-code --yes</pre>
+        <pre><span class="d"># one-time setup</span>
+npm install -g @mizkun/tokenfit
+tokenfit init
+tokenfit start</pre>
         <p class="pricing">Pricing: free · Pro: also free · Enterprise: please don't</p>
       </div>
 

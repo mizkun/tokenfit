@@ -52,14 +52,19 @@ A `UserPromptSubmit` hook fires on every prompt. TokenFit issues one exercise (1
 
 ## Install
 
-npm release coming soon. From source:
+```sh
+npm install -g @mizkun/tokenfit
+tokenfit init      # wires the Claude Code hook + /tf command
+tokenfit start     # daemon + dashboard on 127.0.0.1:4317
+```
+
+Or from source:
 
 ```sh
 git clone https://github.com/mizkun/tokenfit.git
 cd tokenfit
-npm start                                        # daemon + dashboard on 127.0.0.1:4317
-node ./bin/tokenfit.mjs install claude-code      # preview the hook install
-node ./bin/tokenfit.mjs install claude-code --yes
+node ./bin/tokenfit.mjs init
+npm start
 ```
 
 The installer writes a `UserPromptSubmit` hook into `~/.claude/settings.json` and a `/tf` slash command into `~/.claude/commands/tf.md` (autocomplete + fallback when the hook is missing). `node ./bin/tokenfit.mjs doctor` checks the whole chain. The hook exits quietly if the daemon is not running — it will never block your agent session.
@@ -83,7 +88,7 @@ Hooks carry your prompts and your agent-usage rhythm. So the daemon binds to `12
 | --- | --- | --- |
 | `TOKENFIT_PORT` | `4317` | daemon port |
 | `TOKENFIT_URL` | `http://127.0.0.1:4317` | where the hook posts |
-| `TOKENFIT_DATA_FILE` | `./data/tokenfit.json` | history location |
+| `TOKENFIT_DATA_FILE` | `./data/` (git clone) or `~/.tokenfit/` (npm install) | history location |
 | `TOKENFIT_COOLDOWN_MS` | `600000` | minimum rest between exercises |
 | `TOKENFIT_LANG` | `en` | initial language; `/tf lang` overrides and persists |
 | `TOKENFIT_HOOK_TIMEOUT_MS` | `900` | hook fail-fast budget |
