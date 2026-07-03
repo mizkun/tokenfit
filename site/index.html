@@ -337,6 +337,7 @@
       <p class="tagline">The dumbest local fitness tracker for people who wait for AI agents. Every prompt queues one tiny desk exercise, right in your terminal. Do it before the tokens finish streaming.</p>
       <div class="cta-row">
         <a class="button primary" href="#install">Install</a>
+        <a class="button ghost" href="https://github.com/mizkun/tokenfit">GitHub</a>
         <a class="button ghost" href="#how">How it works</a>
       </div>
 
@@ -407,13 +408,19 @@
         <pre><span class="d"># the intended one-liner</span>
 npx tokenfit@latest init
 
-<span class="d"># wires the Claude Code hook + /tf command, then</span>
-tokenfit start</pre>
+<span class="d"># until then, from source</span>
+git clone https://github.com/mizkun/tokenfit.git
+cd tokenfit &amp;&amp; npm start
+node ./bin/tokenfit.mjs install claude-code --yes</pre>
       </div>
 
       <footer>
         <span>TokenFit is a toy, not health advice. Stop if anything hurts.</span>
-        <a href="https://twitter.com/intent/tweet?text=Your%20AI%20thinks.%20You%20rep.%20%23TokenFit" target="_blank" rel="noopener noreferrer">Post #TokenFit</a>
+        <span>
+          <a href="https://github.com/mizkun/tokenfit" target="_blank" rel="noopener noreferrer">GitHub</a>
+          &nbsp;·&nbsp;
+          <a href="https://twitter.com/intent/tweet?text=Your%20AI%20thinks.%20You%20rep.%20%23TokenFit" target="_blank" rel="noopener noreferrer">Post #TokenFit</a>
+        </span>
       </footer>
     </main>
   </body>

@@ -1,80 +1,83 @@
-# TokenFit
+# TokenFit 🏋️
 
-Your AI thinks. You rep.
+> **Your AI thinks. You rep.**
 
-The dumbest local fitness tracker for people who wait for AI agents. Every hook call queues one tiny exercise. Do it, click Done, and watch the reps pile up.
+The dumbest local fitness tracker for people who wait for AI agents. Every prompt you send to Claude Code queues one tiny desk exercise, right in your terminal. Do it before the tokens finish streaming.
 
-## Run
+```text
+> refactor the parser and fix the tests
 
-```sh
-npm start
+  🏋️ Shoulder rolls — 12 reps (Shoulders) — Big circles, unclench jaw. → /tf done when finished
+
+  ⏺ Claude is thinking… (this is your set window)
+
+> /tf done
+
+  ✅ Shoulder rolls — 12 reps done! Today: 3 sets · 🔥 7-day streak · 412 total reps
 ```
 
-Open [http://127.0.0.1:4317](http://127.0.0.1:4317).
+Landing page: **https://token-fit-cdad0.web.app**
 
-## Local CLI
+## How it works
 
-This checkout already exposes the future package shape:
-
-```sh
-node ./bin/tokenfit.mjs start
-node ./bin/tokenfit.mjs hook
-node ./bin/tokenfit.mjs doctor
-node ./bin/tokenfit.mjs install claude-code
-```
-
-For a packaged release, the intended install flow is:
-
-```sh
-npx tokenfit@latest init
-tokenfit install claude-code --yes
-tokenfit start
-```
-
-## Claude Code hook
-
-`tokenfit hook` is the whole terminal UX. On every prompt it queues one exercise and shows it right in your Claude Code session via `systemMessage`. Typing `/tf ...` as a prompt is intercepted by the hook (blocked before it reaches the model — zero tokens):
+A `UserPromptSubmit` hook fires on every prompt. TokenFit issues one exercise (10-minute cooldown, never stacks up guilt) and shows it via `systemMessage`. Typing `/tf ...` as a prompt is intercepted by the same hook and **blocked before it reaches the model** — zero tokens, zero latency, zero transcript noise.
 
 | Input | What happens |
 | --- | --- |
-| any prompt | queues an exercise (10 min cooldown, never stacks) and shows it in the terminal |
-| `/tf` | show the current challenge and today's stats |
+| any prompt | queues an exercise and shows it in the terminal |
+| `/tf` | current challenge and today's stats |
 | `/tf done` (`/tf d`) | mark it done |
-| `/tf skip` (`/tf s`) | skip it |
+| `/tf skip` (`/tf s`) | skip it — we saw that |
 | `/tf stats` | text stats in the terminal |
-| `/tf web` | open the local dashboard in the browser |
+| `/tf web` | open the local dashboard (contribution graph of gains) |
 | `/tf x` | open X with a pre-filled brag post |
 
-`tokenfit install claude-code --yes` writes the hook into `~/.claude/settings.json` and a `/tf` slash command into `~/.claude/commands/tf.md` (autocomplete + fallback when the hook is missing).
+## Exercises
 
-`tokenfit hook` exits quietly if the app is not running, so it should not break your agent session.
+30 tiny desk exercises, each about a minute: no equipment, no floor, office-clothes friendly, quiet enough for an open office. Random picks never repeat any of the previous 8. Full English and Japanese copy — set `TOKENFIT_LANG=ja` for Japanese terminal messages; the web dashboard has its own EN/日本語 toggle.
 
-Example `~/.claude/settings.json` hook:
+## Install
 
-```json
-{
-  "hooks": {
-    "UserPromptSubmit": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "node /Users/kyohei/TokenFit/bin/tokenfit.mjs hook"
-          }
-        ]
-      }
-    ]
-  }
-}
+npm release coming soon. From source:
+
+```sh
+git clone https://github.com/mizkun/tokenfit.git
+cd tokenfit
+npm start                                        # daemon + dashboard on 127.0.0.1:4317
+node ./bin/tokenfit.mjs install claude-code      # preview the hook install
+node ./bin/tokenfit.mjs install claude-code --yes
 ```
 
-For maximum nonsense, point another hook event at the same command. TokenFit stores local progress in `data/tokenfit.json`.
+The installer writes a `UserPromptSubmit` hook into `~/.claude/settings.json` and a `/tf` slash command into `~/.claude/commands/tf.md` (autocomplete + fallback when the hook is missing). `node ./bin/tokenfit.mjs doctor` checks the whole chain. The hook exits quietly if the daemon is not running — it will never block your agent session.
+
+## Local-first, on purpose
+
+Hooks carry your prompts and your agent-usage rhythm. So the daemon binds to `127.0.0.1`, history lives in `data/tokenfit.json` (gitignored), and nothing is ever sent anywhere. The only thing in the cloud is the landing page.
 
 ## API
 
-- `POST /api/hook` queues a generated exercise. Returns `issued: false` (and the pending challenge, if any) while one is already pending or during the cooldown (`TOKENFIT_COOLDOWN_MS`, default 10 min).
-- `POST /api/challenge` queues a manual exercise.
-- `POST /api/done` marks the current exercise done (`{ "id": "..." }` targets a specific one).
-- `POST /api/skip` skips it (same optional `id`).
-- `GET /api/state` returns the current queue, recent activity, and totals.
+- `POST /api/hook` — queue a generated exercise. Returns `issued: false` (plus the pending challenge, if any) while one is pending or during the cooldown.
+- `POST /api/challenge` — queue a manual exercise.
+- `POST /api/done` — complete the current exercise (`{ "id": "..." }` targets a specific one).
+- `POST /api/skip` — skip it (same optional `id`).
+- `GET /api/state` — current queue, recent activity, totals.
+- `GET /api/events` — server-sent events stream of state changes.
+
+## Configuration
+
+| Env var | Default | What it does |
+| --- | --- | --- |
+| `TOKENFIT_PORT` | `4317` | daemon port |
+| `TOKENFIT_URL` | `http://127.0.0.1:4317` | where the hook posts |
+| `TOKENFIT_DATA_FILE` | `./data/tokenfit.json` | history location |
+| `TOKENFIT_COOLDOWN_MS` | `600000` | minimum rest between exercises |
+| `TOKENFIT_LANG` | `en` | `ja` for Japanese terminal messages |
+| `TOKENFIT_HOOK_TIMEOUT_MS` | `900` | hook fail-fast budget |
+
+## Development
+
+```sh
+npm test
+```
+
+TokenFit is a toy, not health advice. Stop if anything hurts. MIT licensed.

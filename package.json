@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "description": "Your AI thinks. You rep.",
+  "license": "MIT",
+  "repository": "github:mizkun/tokenfit",
   "bin": {
     "tokenfit": "./bin/tokenfit.mjs"
   },
