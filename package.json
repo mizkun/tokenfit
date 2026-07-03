@@ -1,0 +1,17 @@
+{
+  "name": "tokenfit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Your AI thinks. You rep.",
+  "bin": {
+    "tokenfit": "./bin/tokenfit.mjs"
+  },
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
