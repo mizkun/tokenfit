@@ -24,6 +24,7 @@ describe('state transitions', () => {
     assert.equal(publicState.stats.totalDone, 1);
     assert.equal(publicState.stats.todayDone, 1);
     assert.equal(publicState.stats.queueCount, 0);
+    assert.equal(publicState.today[0].id, challenge.id);
   });
 
   it('skips only pending challenges', () => {

@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
+import { handlePromptSubmit } from '../lib/tf.mjs';
 import { createTokenFitServer } from '../server.mjs';
 
 const DEFAULT_PORT = Number(process.env.TOKENFIT_PORT || process.env.PORT || 4317);
@@ -44,24 +45,18 @@ function parsePayload(raw) {
 
 async function postHook() {
   const raw = await readStdin();
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), HOOK_TIMEOUT_MS);
+  const input = parsePayload(raw) || {};
 
   try {
-    await fetch(`${DEFAULT_URL}/api/hook`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        source: 'tokenfit-cli',
-        receivedAt: new Date().toISOString(),
-        payload: parsePayload(raw)
-      }),
-      signal: controller.signal
+    const output = await handlePromptSubmit(input, {
+      baseUrl: DEFAULT_URL,
+      timeoutMs: HOOK_TIMEOUT_MS
     });
+    if (output) {
+      console.log(JSON.stringify(output));
+    }
   } catch {
     // Hooks must never block the coding agent.
-  } finally {
-    clearTimeout(timeout);
   }
 }
 
@@ -84,6 +79,36 @@ async function status() {
 
 function settingsPath() {
   return join(homedir(), '.claude', 'settings.json');
+}
+
+function commandFilePath() {
+  return join(homedir(), '.claude', 'commands', 'tf.md');
+}
+
+const TF_COMMAND_MD = `---
+description: TokenFit — log reps, view stats, share
+argument-hint: done | skip | stats | web | x
+---
+
+TokenFit's UserPromptSubmit hook normally intercepts /tf before it ever reaches you.
+If you are reading this, the hook is missing or disabled, so act as the fallback.
+The local TokenFit API lives at http://127.0.0.1:4317.
+
+The user typed: /tf $ARGUMENTS
+
+- done → POST /api/done with body {}
+- skip → POST /api/skip with body {}
+- (empty) or stats → GET /api/state and summarize stats in one line
+- web → open http://127.0.0.1:4317 in the default browser
+- x → GET /api/state, then open https://twitter.com/intent/tweet?text=<url-encoded brag with stats.totalReps and #TokenFit>
+
+Use curl (and \`open\` on macOS). If the API is unreachable, tell the user to run \`tokenfit start\`.
+Reply with a single short line about what happened.
+`;
+
+async function writeCommandFile() {
+  await mkdir(dirname(commandFilePath()), { recursive: true });
+  await writeFile(commandFilePath(), TF_COMMAND_MD, 'utf8');
 }
 
 async function readClaudeSettings() {
@@ -153,12 +178,15 @@ async function installClaudeCode({ yes = false } = {}) {
   if (!yes) {
     console.log(`Ready to add this hook to ${path}:`);
     console.log(JSON.stringify(addClaudeHook(await readClaudeSettings()).hooks.UserPromptSubmit.at(-1), null, 2));
-    console.log('Run again with --yes to write the file.');
+    console.log(`Also writes the /tf slash command to ${commandFilePath()}.`);
+    console.log('Run again with --yes to write the files.');
     return;
   }
 
   await writeClaudeSettings(settings);
+  await writeCommandFile();
   console.log(`Installed Claude Code hook in ${path}`);
+  console.log(`Installed /tf command in ${commandFilePath()}`);
 }
 
 async function uninstallClaudeCode({ yes = false } = {}) {
@@ -166,12 +194,13 @@ async function uninstallClaudeCode({ yes = false } = {}) {
   const settings = removeClaudeHook(await readClaudeSettings());
 
   if (!yes) {
-    console.log(`Ready to remove TokenFit hooks from ${path}.`);
-    console.log('Run again with --yes to write the file.');
+    console.log(`Ready to remove TokenFit hooks from ${path} and ${commandFilePath()}.`);
+    console.log('Run again with --yes to write the files.');
     return;
   }
 
   await writeClaudeSettings(settings);
+  await rm(commandFilePath(), { force: true });
   console.log(`Removed TokenFit Claude Code hook from ${path}`);
 }
 
@@ -193,6 +222,8 @@ async function doctor() {
   } catch (error) {
     checks.push(['claude hook', `settings parse error: ${error.message}`]);
   }
+
+  checks.push(['/tf command', existsSync(commandFilePath()) ? 'installed' : 'not installed']);
 
   for (const [name, value] of checks) {
     console.log(`${name}: ${value}`);

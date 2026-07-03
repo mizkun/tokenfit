@@ -217,8 +217,29 @@ export function addChallenge(state, { source = 'hook', payload = null, now = new
   return challenge;
 }
 
+export const DEFAULT_COOLDOWN_MS = Number(process.env.TOKENFIT_COOLDOWN_MS || 10 * 60 * 1000);
+
+export function issueHookChallenge(state, {
+  source = 'hook',
+  payload = null,
+  cooldownMs = DEFAULT_COOLDOWN_MS,
+  now = new Date()
+} = {}) {
+  const pending = state.challenges.find((challenge) => challenge.status === 'pending');
+  if (pending) {
+    return { challenge: pending, issued: false };
+  }
+
+  const last = state.challenges.at(-1);
+  if (last && now - new Date(last.createdAt) < cooldownMs) {
+    return { challenge: null, issued: false };
+  }
+
+  return { challenge: addChallenge(state, { source, payload, now }), issued: true };
+}
+
 export function completeChallenge(state, id, now = new Date()) {
-  const challenge = state.challenges.find((item) => item.id === id && item.status === 'pending');
+  const challenge = state.challenges.find((item) => item.status === 'pending' && (id == null || item.id === id));
   if (!challenge) {
     return null;
   }
@@ -228,7 +249,7 @@ export function completeChallenge(state, id, now = new Date()) {
 }
 
 export function skipChallenge(state, id, now = new Date()) {
-  const challenge = state.challenges.find((item) => item.id === id && item.status === 'pending');
+  const challenge = state.challenges.find((item) => item.status === 'pending' && (id == null || item.id === id));
   if (!challenge) {
     return null;
   }
@@ -242,6 +263,11 @@ export function toPublicState(state, now = new Date()) {
   const done = state.challenges.filter((challenge) => challenge.status === 'done');
   const skipped = state.challenges.filter((challenge) => challenge.status === 'skipped');
   const doneToday = done.filter((challenge) => sameLocalDay(challenge.completedAt, now));
+  const doneByDate = done.reduce((counts, challenge) => {
+    const key = dateKey(new Date(challenge.completedAt));
+    counts[key] = (counts[key] || 0) + 1;
+    return counts;
+  }, {});
   const activeDates = new Set(done.map((challenge) => dateKey(new Date(challenge.completedAt))));
   let streak = 0;
   let cursor = new Date(now);
@@ -254,6 +280,7 @@ export function toPublicState(state, now = new Date()) {
   return {
     current: pending[0] || null,
     queue: pending,
+    today: doneToday.slice().reverse(),
     recent: state.challenges
       .filter((challenge) => challenge.status !== 'pending')
       .slice(-12)
@@ -265,7 +292,8 @@ export function toPublicState(state, now = new Date()) {
       todayReps: doneToday.reduce((sum, challenge) => sum + repCredit(challenge), 0),
       skipped: skipped.length,
       queueCount: pending.length,
-      streak
+      streak,
+      doneByDate
     }
   };
 }
@@ -344,7 +372,8 @@ function serveStatic(publicDir, request, response) {
 
 export function createTokenFitServer({
   dataFile = DEFAULT_DATA_FILE,
-  publicDir = DEFAULT_PUBLIC_DIR
+  publicDir = DEFAULT_PUBLIC_DIR,
+  cooldownMs = DEFAULT_COOLDOWN_MS
 } = {}) {
   const clients = new Set();
   let writeQueue = Promise.resolve();
@@ -387,10 +416,12 @@ export function createTokenFitServer({
       if (request.method === 'POST' && url.pathname === '/api/hook') {
         const payload = await readJsonBody(request);
         const state = await readState(dataFile);
-        const challenge = addChallenge(state, { source: 'claude-code', payload });
-        await persist(state);
-        broadcast(state);
-        sendJson(response, 201, { ok: true, challenge, state: toPublicState(state) });
+        const { challenge, issued } = issueHookChallenge(state, { source: 'claude-code', payload, cooldownMs });
+        if (issued) {
+          await persist(state);
+          broadcast(state);
+        }
+        sendJson(response, issued ? 201 : 200, { ok: true, issued, challenge, state: toPublicState(state) });
         return;
       }
 

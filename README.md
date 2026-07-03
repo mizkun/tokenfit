@@ -33,7 +33,21 @@ tokenfit start
 
 ## Claude Code hook
 
-`tokenfit hook` posts to TokenFit and exits quietly if the app is not running, so it should not break your agent session.
+`tokenfit hook` is the whole terminal UX. On every prompt it queues one exercise and shows it right in your Claude Code session via `systemMessage`. Typing `/tf ...` as a prompt is intercepted by the hook (blocked before it reaches the model — zero tokens):
+
+| Input | What happens |
+| --- | --- |
+| any prompt | queues an exercise (10 min cooldown, never stacks) and shows it in the terminal |
+| `/tf` | show the current challenge and today's stats |
+| `/tf done` (`/tf d`) | mark it done |
+| `/tf skip` (`/tf s`) | skip it |
+| `/tf stats` | text stats in the terminal |
+| `/tf web` | open the local dashboard in the browser |
+| `/tf x` | open X with a pre-filled brag post |
+
+`tokenfit install claude-code --yes` writes the hook into `~/.claude/settings.json` and a `/tf` slash command into `~/.claude/commands/tf.md` (autocomplete + fallback when the hook is missing).
+
+`tokenfit hook` exits quietly if the app is not running, so it should not break your agent session.
 
 Example `~/.claude/settings.json` hook:
 
@@ -59,8 +73,8 @@ For maximum nonsense, point another hook event at the same command. TokenFit sto
 
 ## API
 
-- `POST /api/hook` queues a generated exercise.
+- `POST /api/hook` queues a generated exercise. Returns `issued: false` (and the pending challenge, if any) while one is already pending or during the cooldown (`TOKENFIT_COOLDOWN_MS`, default 10 min).
 - `POST /api/challenge` queues a manual exercise.
-- `POST /api/done` with `{ "id": "..." }` marks a queued exercise done.
-- `POST /api/skip` with `{ "id": "..." }` skips it.
+- `POST /api/done` marks the current exercise done (`{ "id": "..." }` targets a specific one).
+- `POST /api/skip` skips it (same optional `id`).
 - `GET /api/state` returns the current queue, recent activity, and totals.

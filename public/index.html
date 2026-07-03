@@ -9,48 +9,21 @@
   <body>
     <main class="app-shell">
       <section class="hero-band" aria-labelledby="app-title">
-        <div class="brand-lockup">
-          <p class="eyebrow">TokenFit</p>
-          <h1 id="app-title">Your AI thinks. You rep.</h1>
-        </div>
-        <div class="score-strip" aria-label="TokenFit stats">
-          <div>
-            <span id="today-reps">0</span>
-            <small>today reps</small>
-          </div>
-          <div>
-            <span id="total-reps">0</span>
-            <small>total reps</small>
-          </div>
-          <div>
-            <span id="streak">0</span>
-            <small>day streak</small>
-          </div>
+        <p class="eyebrow">TokenFit</p>
+        <h1 id="app-title">Your AI thinks. You rep.</h1>
+        <div class="language-toggle" aria-label="Language">
+          <button id="lang-en" class="language-button is-active" type="button">EN</button>
+          <button id="lang-ja" class="language-button" type="button">日本語</button>
         </div>
       </section>
 
       <section class="workout-grid">
         <article class="current-panel" aria-live="polite">
-          <div class="panel-topline">
-            <span id="queue-count">Queue: 0</span>
-            <button id="manual-trigger" class="secondary-button" type="button">New</button>
-          </div>
-          <div class="rep-stack-stage" aria-label="Rep stack">
-            <div class="stack-header">
-              <span>Rep stack</span>
-              <strong><span id="stack-total">0</span> reps</strong>
-            </div>
-            <div class="iron-rack">
-              <div id="plate-stack" class="plate-stack" aria-hidden="true"></div>
-              <div class="rack-floor" aria-hidden="true"></div>
-            </div>
-          </div>
           <div id="empty-state" class="empty-state">
             <p class="status-copy">Waiting for a hook.</p>
-            <p class="ghost-copy">Run the Claude Code hook or tap New.</p>
+            <button id="manual-trigger" class="secondary-button" type="button">Test Hook</button>
           </div>
           <div id="challenge-card" class="challenge-card is-hidden">
-            <p id="challenge-target" class="challenge-target">Core</p>
             <h2 id="challenge-name">Desk plank</h2>
             <div class="rep-meter">
               <span id="challenge-amount">20</span>
@@ -58,7 +31,6 @@
             </div>
             <p id="challenge-cue" class="cue">Forearms on desk, ribs down.</p>
             <div class="exercise-detail">
-              <h3>How to do it</h3>
               <ol id="challenge-steps"></ol>
             </div>
             <div class="action-row">
@@ -68,32 +40,28 @@
           </div>
         </article>
 
-        <aside class="side-panel" aria-label="Workout log">
-          <div class="mini-stats">
-            <div>
-              <span id="today-done">0</span>
-              <small>sets today</small>
-            </div>
-            <div>
-              <span id="total-done">0</span>
-              <small>sets done</small>
-            </div>
-            <div>
-              <span id="skipped-count">0</span>
-              <small>skipped</small>
+        <aside class="side-panel" aria-label="Progress">
+          <div class="rep-stack-stage" aria-label="Rep garden">
+            <div class="rep-garden" aria-hidden="true">
+              <div id="stack-meter" class="stack-meter"></div>
             </div>
           </div>
+
+          <div class="daily-summary" aria-label="Today">
+            <div class="daily-stats">
+              <div>
+                <span id="today-count">0</span>
+                <small data-i18n="todayLabel">today</small>
+              </div>
+              <div>
+                <span id="streak-count">0</span>
+                <small data-i18n="streakLabel">streak</small>
+              </div>
+            </div>
+            <ol id="today-list" class="today-list"></ol>
+          </div>
+
           <a id="share-x" class="share-button" href="https://twitter.com/intent/tweet" target="_blank" rel="noopener noreferrer">Post to X</a>
-
-          <div class="list-section">
-            <h2>Queue</h2>
-            <ol id="queue-list" class="queue-list"></ol>
-          </div>
-
-          <div class="list-section">
-            <h2>Recent</h2>
-            <ol id="recent-list" class="recent-list"></ol>
-          </div>
         </aside>
       </section>
     </main>
