@@ -7,7 +7,11 @@ The dumbest local fitness tracker for people who wait for AI agents. Every promp
 ```text
 > refactor the parser and fix the tests
 
-  🏋️ Shoulder rolls — 12 reps (Shoulders) — Big circles, unclench jaw. → /tf done when finished
+  🏋️ Shoulder rolls — 12 reps (Shoulders)
+  1. Sit or stand tall.
+  2. Roll both shoulders up, back, and down.
+  3. Keep the motion slow and relaxed.
+  → /tf done when finished · /tf skip to bail
 
   ⏺ Claude is thinking… (this is your set window)
 
