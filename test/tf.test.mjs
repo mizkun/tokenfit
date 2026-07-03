@@ -200,6 +200,61 @@ describe('handlePromptSubmit', () => {
   });
 });
 
+describe('/tf how', () => {
+  let server;
+  let baseUrl;
+  const openUrl = async () => {};
+
+  before(async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'tokenfit-how-test-'));
+    ({ server } = createTokenFitServer({
+      dataFile: join(dir, 'tokenfit.json'),
+      publicDir: join(process.cwd(), 'public')
+    }));
+    await new Promise((resolve) => {
+      server.listen(0, '127.0.0.1', () => {
+        baseUrl = `http://127.0.0.1:${server.address().port}`;
+        resolve();
+      });
+    });
+  });
+
+  after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+  });
+
+  it('parses how and steps aliases', () => {
+    assert.equal(parseTfCommand('/tf how').cmd, 'how');
+    assert.equal(parseTfCommand('/tf steps').cmd, 'how');
+  });
+
+  it('shows numbered steps for the current challenge', async () => {
+    await handlePromptSubmit({ prompt: 'gimme work' }, { baseUrl, openUrl });
+    const output = await handlePromptSubmit({ prompt: '/tf how' }, { baseUrl, openUrl });
+
+    assert.equal(output.decision, 'block');
+    assert.match(output.reason, /1\. /);
+    assert.match(output.reason, /2\. /);
+    assert.match(output.reason, /3\. /);
+  });
+
+  it('shows Japanese steps when lang is ja', async () => {
+    const output = await handlePromptSubmit({ prompt: '/tf how' }, { baseUrl, openUrl, lang: 'ja' });
+
+    assert.equal(output.decision, 'block');
+    assert.match(output.reason, /1\. /);
+    assert.match(output.reason, /[ぁ-んァ-ヶー一-龯]/);
+  });
+
+  it('says nothing pending when idle', async () => {
+    await handlePromptSubmit({ prompt: '/tf skip' }, { baseUrl, openUrl });
+    const output = await handlePromptSubmit({ prompt: '/tf how' }, { baseUrl, openUrl });
+
+    assert.equal(output.decision, 'block');
+    assert.doesNotMatch(output.reason, /1\. /);
+  });
+});
+
 describe('http api extensions', () => {
   let server;
   let baseUrl;
