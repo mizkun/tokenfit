@@ -5,7 +5,10 @@
   "description": "Your AI thinks. You rep. The dumbest local fitness tracker for people who wait for AI agents.",
   "license": "MIT",
   "author": "Kyohei Mizutani (https://github.com/mizkun)",
-  "repository": "github:mizkun/tokenfit",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mizkun/tokenfit.git"
+  },
   "homepage": "https://token-fit-cdad0.web.app",
   "bugs": "https://github.com/mizkun/tokenfit/issues",
   "keywords": [
@@ -17,7 +20,7 @@
     "developer-tools"
   ],
   "bin": {
-    "tokenfit": "./bin/tokenfit.mjs"
+    "tokenfit": "bin/tokenfit.mjs"
   },
   "files": [
     "bin",
