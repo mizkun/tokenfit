@@ -43,6 +43,8 @@ A `UserPromptSubmit` hook fires on every prompt. TokenFit issues one exercise (1
 | `/tf stats` | text stats in the terminal |
 | `/tf web` | open the local dashboard (contribution graph of gains) |
 | `/tf x` | open X with a pre-filled brag post |
+| `/tf off` / `/tf on` | pause / resume the gains — the couch understands |
+| `/tf lang ja` (`/tf ja`, `/tf en`) | switch language, persisted in the daemon |
 
 ## Exercises
 
@@ -83,7 +85,7 @@ Hooks carry your prompts and your agent-usage rhythm. So the daemon binds to `12
 | `TOKENFIT_URL` | `http://127.0.0.1:4317` | where the hook posts |
 | `TOKENFIT_DATA_FILE` | `./data/tokenfit.json` | history location |
 | `TOKENFIT_COOLDOWN_MS` | `600000` | minimum rest between exercises |
-| `TOKENFIT_LANG` | `en` | `ja` for Japanese terminal messages |
+| `TOKENFIT_LANG` | `en` | initial language; `/tf lang` overrides and persists |
 | `TOKENFIT_HOOK_TIMEOUT_MS` | `900` | hook fail-fast budget |
 
 ## FAQ

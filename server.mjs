@@ -25,8 +25,13 @@ import { EXERCISES } from './lib/exercises.mjs';
 export function createInitialState() {
   return {
     version: 1,
-    challenges: []
+    challenges: [],
+    settings: defaultSettings()
   };
+}
+
+function defaultSettings() {
+  return { lang: 'en', paused: false };
 }
 
 export function dateKey(date = new Date()) {
@@ -96,6 +101,10 @@ export function issueHookChallenge(state, {
   cooldownMs = DEFAULT_COOLDOWN_MS,
   now = new Date()
 } = {}) {
+  if (state.settings?.paused) {
+    return { challenge: null, issued: false };
+  }
+
   const pending = state.challenges.find((challenge) => challenge.status === 'pending');
   if (pending) {
     return { challenge: pending, issued: false };
@@ -149,6 +158,7 @@ export function toPublicState(state, now = new Date()) {
   }
 
   return {
+    settings: { ...defaultSettings(), ...(state.settings || {}) },
     current: pending[0] || null,
     queue: pending,
     today: doneToday.slice().reverse(),
@@ -176,7 +186,7 @@ async function readState(dataFile) {
     if (!parsed || !Array.isArray(parsed.challenges)) {
       return createInitialState();
     }
-    return parsed;
+    return { ...parsed, settings: { ...defaultSettings(), ...(parsed.settings || {}) } };
   } catch (error) {
     if (error.code === 'ENOENT') {
       return createInitialState();
@@ -293,6 +303,21 @@ export function createTokenFitServer({
           broadcast(state);
         }
         sendJson(response, issued ? 201 : 200, { ok: true, issued, challenge, state: toPublicState(state) });
+        return;
+      }
+
+      if (request.method === 'POST' && url.pathname === '/api/settings') {
+        const body = await readJsonBody(request);
+        const state = await readState(dataFile);
+        if (body?.lang === 'en' || body?.lang === 'ja') {
+          state.settings.lang = body.lang;
+        }
+        if (typeof body?.paused === 'boolean') {
+          state.settings.paused = body.paused;
+        }
+        await persist(state);
+        broadcast(state);
+        sendJson(response, 200, { ok: true, settings: state.settings, state: toPublicState(state) });
         return;
       }
 
