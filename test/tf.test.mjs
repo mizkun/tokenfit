@@ -97,11 +97,17 @@ describe('share text', () => {
     assert.match(text, /#TokenFit/);
   });
 
+  it('closes the viral loop with a link back to the repo', () => {
+    assert.match(buildShareText(stats), /github\.com\/mizkun\/tokenfit/);
+    assert.match(buildShareText(stats, 'ja'), /github\.com\/mizkun\/tokenfit/);
+  });
+
   it('builds an X intent url with the text embedded', () => {
     const url = shareUrl(stats);
     assert.ok(url.startsWith('https://twitter.com/intent/tweet?text='));
     assert.match(decodeURIComponent(url), /123/);
     assert.match(decodeURIComponent(url), /#TokenFit/);
+    assert.match(decodeURIComponent(url), /github\.com\/mizkun\/tokenfit/);
   });
 });
 
