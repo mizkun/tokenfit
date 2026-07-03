@@ -10,6 +10,8 @@
 
 The dumbest local fitness tracker for people who wait for AI agents. Every prompt you send to Claude Code queues one tiny desk exercise, right in your terminal. Do it before the tokens finish streaming.
 
+![TokenFit demo](docs/demo.gif)
+
 ```text
 > refactor the parser and fix the tests
 

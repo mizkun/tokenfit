@@ -6,3 +6,4 @@ data/
 *.log
 *.mp4
 *.gif
+!docs/demo.gif
