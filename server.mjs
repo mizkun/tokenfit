@@ -19,138 +19,8 @@ const MIME_TYPES = new Map([
   ['.ico', 'image/x-icon']
 ]);
 
-export const EXERCISES = [
-  {
-    id: 'desk-pushups',
-    name: 'Desk push-ups',
-    amount: 8,
-    unit: 'reps',
-    target: 'Chest and triceps',
-    cue: 'Hands on desk, body straight.',
-    steps: [
-      'Place both hands on a sturdy desk.',
-      'Step back until your body forms a straight line.',
-      'Lower your chest toward the desk, then press back up.'
-    ]
-  },
-  {
-    id: 'chair-squats',
-    name: 'Chair squats',
-    amount: 10,
-    unit: 'reps',
-    target: 'Legs',
-    cue: 'Tap the chair, stand tall.',
-    steps: [
-      'Stand in front of your chair with feet shoulder-width apart.',
-      'Push hips back and lightly tap the chair.',
-      'Drive through your feet and stand tall.'
-    ]
-  },
-  {
-    id: 'calf-raises',
-    name: 'Calf raises',
-    amount: 15,
-    unit: 'reps',
-    target: 'Calves',
-    cue: 'Rise, pause, lower slow.',
-    steps: [
-      'Stand tall and hold the desk if needed.',
-      'Rise onto the balls of your feet.',
-      'Pause briefly, then lower with control.'
-    ]
-  },
-  {
-    id: 'shoulder-rolls',
-    name: 'Shoulder rolls',
-    amount: 12,
-    unit: 'reps',
-    target: 'Shoulders',
-    cue: 'Big circles, unclench jaw.',
-    steps: [
-      'Sit or stand tall.',
-      'Roll both shoulders up, back, and down.',
-      'Keep the motion slow and relaxed.'
-    ]
-  },
-  {
-    id: 'standing-twists',
-    name: 'Standing twists',
-    amount: 12,
-    unit: 'reps',
-    target: 'Core',
-    cue: 'Rotate gently side to side.',
-    steps: [
-      'Stand with soft knees and hands near your ribs.',
-      'Rotate your torso gently to one side.',
-      'Return to center and rotate to the other side.'
-    ]
-  },
-  {
-    id: 'wall-sit',
-    name: 'Wall sit',
-    amount: 20,
-    unit: 'seconds',
-    target: 'Quads',
-    cue: 'Back flat, knees comfortable.',
-    steps: [
-      'Lean your back against a wall.',
-      'Slide down only as far as feels comfortable.',
-      'Hold, breathe, then stand back up slowly.'
-    ]
-  },
-  {
-    id: 'plank',
-    name: 'Desk plank',
-    amount: 20,
-    unit: 'seconds',
-    target: 'Core',
-    cue: 'Forearms on desk, ribs down.',
-    steps: [
-      'Place forearms on a sturdy desk.',
-      'Step back until your body forms a long line.',
-      'Brace lightly and hold without shrugging.'
-    ]
-  },
-  {
-    id: 'wrist-resets',
-    name: 'Wrist resets',
-    amount: 10,
-    unit: 'reps',
-    target: 'Wrists',
-    cue: 'Slow flex, slow extend.',
-    steps: [
-      'Hold both arms forward.',
-      'Flex wrists down, then extend them up.',
-      'Move slowly and stop if anything feels sharp.'
-    ]
-  },
-  {
-    id: 'glute-squeezes',
-    name: 'Glute squeezes',
-    amount: 12,
-    unit: 'reps',
-    target: 'Glutes',
-    cue: 'Squeeze, hold, release.',
-    steps: [
-      'Sit or stand with a tall posture.',
-      'Squeeze your glutes for one second.',
-      'Release fully before the next rep.'
-    ]
-  },
-  {
-    id: 'marches',
-    name: 'Standing marches',
-    amount: 20,
-    unit: 'reps',
-    target: 'Hips',
-    cue: 'Lift knees, stay relaxed.',
-    steps: [
-      'Stand tall beside your desk.',
-      'Lift one knee, then lower it.',
-      'Alternate sides at an easy pace.'
-    ]
-  }
-];
+export { EXERCISES } from './lib/exercises.mjs';
+import { EXERCISES } from './lib/exercises.mjs';
 
 export function createInitialState() {
   return {
@@ -185,7 +55,7 @@ function repCredit(challenge) {
 }
 
 function pickExercise(state) {
-  const recentIds = state.challenges.slice(-3).map((challenge) => challenge.exerciseId);
+  const recentIds = state.challenges.slice(-8).map((challenge) => challenge.exerciseId);
   const candidates = EXERCISES.filter((exercise) => !recentIds.includes(exercise.id));
   const pool = candidates.length > 0 ? candidates : EXERCISES;
   return pool[Math.floor(Math.random() * pool.length)];
@@ -196,12 +66,13 @@ export function addChallenge(state, { source = 'hook', payload = null, now = new
   const challenge = {
     id: makeId(),
     exerciseId: exercise.id,
-    name: exercise.name,
+    name: exercise.en.name,
     amount: exercise.amount,
     unit: exercise.unit,
-    target: exercise.target,
-    cue: exercise.cue,
-    steps: exercise.steps,
+    target: exercise.en.target,
+    cue: exercise.en.cue,
+    steps: exercise.en.steps,
+    ja: exercise.ja,
     status: 'pending',
     source,
     createdAt: now.toISOString(),

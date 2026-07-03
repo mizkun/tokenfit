@@ -64,129 +64,6 @@ const COPY = {
   }
 };
 
-const EXERCISE_COPY = {
-  'desk-pushups': {
-    ja: {
-      name: 'デスク腕立て',
-      target: '胸・上腕三頭筋',
-      cue: '机に手をついて、体をまっすぐ。',
-      steps: [
-        '安定した机に両手を置く。',
-        '体が一直線になるまで足を後ろに引く。',
-        '胸を机に近づけてから押し戻す。'
-      ]
-    }
-  },
-  'chair-squats': {
-    ja: {
-      name: '椅子スクワット',
-      target: '脚',
-      cue: '椅子に軽くタッチして、まっすぐ立つ。',
-      steps: [
-        '椅子の前に足を肩幅で立つ。',
-        'お尻を後ろに引いて椅子に軽く触れる。',
-        '足裏で床を押して立ち上がる。'
-      ]
-    }
-  },
-  'calf-raises': {
-    ja: {
-      name: 'カーフレイズ',
-      target: 'ふくらはぎ',
-      cue: '上がって、止めて、ゆっくり下ろす。',
-      steps: [
-        '必要なら机に軽く手を添えて立つ。',
-        'つま先立ちになる。',
-        '一瞬止めてからゆっくり下ろす。'
-      ]
-    }
-  },
-  'shoulder-rolls': {
-    ja: {
-      name: '肩回し',
-      target: '肩',
-      cue: '大きく回して、あごの力を抜く。',
-      steps: [
-        '座るか立って背筋を伸ばす。',
-        '肩を上げて、後ろに回して、下ろす。',
-        'ゆっくりリラックスして動かす。'
-      ]
-    }
-  },
-  'standing-twists': {
-    ja: {
-      name: '立位ツイスト',
-      target: '体幹',
-      cue: '左右にやさしくひねる。',
-      steps: [
-        '膝を少しゆるめて立つ。',
-        '上半身を片側へやさしく回す。',
-        '中央に戻って反対側へ回す。'
-      ]
-    }
-  },
-  'wall-sit': {
-    ja: {
-      name: 'ウォールシット',
-      target: '太もも',
-      cue: '背中を壁につけて、無理ない深さで。',
-      steps: [
-        '背中を壁につける。',
-        'きつすぎない位置までゆっくり下がる。',
-        '呼吸しながらキープして、ゆっくり立つ。'
-      ]
-    }
-  },
-  plank: {
-    ja: {
-      name: 'デスクプランク',
-      target: '体幹',
-      cue: '前腕を机に置いて、肋骨を締める。',
-      steps: [
-        '安定した机に前腕を置く。',
-        '体が長い一直線になるまで足を引く。',
-        '肩をすくめず、軽くお腹に力を入れてキープする。'
-      ]
-    }
-  },
-  'wrist-resets': {
-    ja: {
-      name: '手首リセット',
-      target: '手首',
-      cue: 'ゆっくり曲げて、ゆっくり伸ばす。',
-      steps: [
-        '両腕を前に出す。',
-        '手首を下に曲げてから上に伸ばす。',
-        'ゆっくり動かし、鋭い痛みがあれば止める。'
-      ]
-    }
-  },
-  'glute-squeezes': {
-    ja: {
-      name: 'お尻スクイーズ',
-      target: 'お尻',
-      cue: '締めて、止めて、ゆるめる。',
-      steps: [
-        '座るか立って姿勢を整える。',
-        'お尻に1秒ほど力を入れる。',
-        '完全にゆるめてから次のrepへ。'
-      ]
-    }
-  },
-  marches: {
-    ja: {
-      name: 'その場マーチ',
-      target: '股関節',
-      cue: '膝を上げて、力まずに。',
-      steps: [
-        '机の横でまっすぐ立つ。',
-        '片膝を上げて下ろす。',
-        '左右交互に楽なペースで続ける。'
-      ]
-    }
-  }
-};
-
 let currentChallengeId = null;
 let currentState = null;
 let currentLang = localStorage.getItem('tokenfit-lang') || 'en';
@@ -203,21 +80,20 @@ function copy() {
 }
 
 function exerciseText(challenge) {
-  if (currentLang === 'en') {
+  if (currentLang === 'ja' && challenge.ja) {
     return {
-      name: challenge.name,
-      target: challenge.target,
-      cue: challenge.cue,
-      steps: challenge.steps || [challenge.cue]
+      name: challenge.ja.name || challenge.name,
+      target: challenge.ja.target || challenge.target,
+      cue: challenge.ja.cue || challenge.cue,
+      steps: challenge.ja.steps || challenge.steps || [challenge.cue]
     };
   }
 
-  const localized = EXERCISE_COPY[challenge.exerciseId]?.[currentLang];
   return {
     name: challenge.name,
-    target: localized?.target || challenge.target,
-    cue: localized?.cue || challenge.cue,
-    steps: localized?.steps || challenge.steps || [challenge.cue]
+    target: challenge.target,
+    cue: challenge.cue,
+    steps: challenge.steps || [challenge.cue]
   };
 }
 
