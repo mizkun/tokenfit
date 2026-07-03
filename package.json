@@ -1,6 +1,6 @@
 {
   "name": "@mizkun/tokenfit",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "type": "module",
   "description": "Your AI thinks. You rep. The dumbest local fitness tracker for people who wait for AI agents.",
   "license": "MIT",

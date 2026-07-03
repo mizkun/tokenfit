@@ -384,6 +384,12 @@ const isDirectRun = process.argv[1] && fileURLToPath(import.meta.url) === proces
 
 if (isDirectRun) {
   const { server } = createTokenFitServer();
+  server.on('error', (error) => {
+    if (error.code !== 'EADDRINUSE') {
+      throw error;
+    }
+    console.log(`Port ${DEFAULT_PORT} is busy — TokenFit is probably already running at http://127.0.0.1:${DEFAULT_PORT}`);
+  });
   server.listen(DEFAULT_PORT, '127.0.0.1', () => {
     console.log(`TokenFit is running at http://127.0.0.1:${DEFAULT_PORT}`);
     console.log(`Hook endpoint: http://127.0.0.1:${DEFAULT_PORT}/api/hook`);

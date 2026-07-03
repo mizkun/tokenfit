@@ -68,6 +68,18 @@ async function postHook() {
 
 async function start() {
   const { server } = createTokenFitServer();
+  server.on('error', async (error) => {
+    if (error.code !== 'EADDRINUSE') {
+      throw error;
+    }
+    if (await daemonRunning()) {
+      console.log(`TokenFit is already running at ${DEFAULT_URL}. Nothing to do — go do your reps.`);
+      return;
+    }
+    console.error(`Port ${DEFAULT_PORT} is taken by something that is not TokenFit.`);
+    console.error('Pick another port with TOKENFIT_PORT=<port> tokenfit start');
+    process.exitCode = 1;
+  });
   server.listen(DEFAULT_PORT, '127.0.0.1', () => {
     console.log(`TokenFit is running at ${DEFAULT_URL}`);
     console.log(`Hook endpoint: ${DEFAULT_URL}/api/hook`);
