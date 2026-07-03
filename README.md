@@ -2,6 +2,7 @@
 
 > **Your AI thinks. You rep.**
 
+![npm](https://img.shields.io/npm/v/%40mizkun%2Ftokenfit)
 ![dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
 ![blazingly](https://img.shields.io/badge/blazingly-local-blue)
 ![gains](https://img.shields.io/badge/gains-unaudited-orange)
@@ -53,12 +54,10 @@ A `UserPromptSubmit` hook fires on every prompt. TokenFit issues one exercise (1
 ## Install
 
 ```sh
-npm install -g mizkun/tokenfit   # straight from GitHub, works today
-tokenfit init                    # wires the Claude Code hook + /tf command
-tokenfit start                   # daemon + dashboard on 127.0.0.1:4317
+npm install -g @mizkun/tokenfit
+tokenfit init      # wires the Claude Code hook + /tf command
+tokenfit start     # daemon + dashboard on 127.0.0.1:4317
 ```
-
-(`npm install -g @mizkun/tokenfit` from the npm registry is coming.)
 
 Or from source:
 
