@@ -2,6 +2,11 @@
 
 > **Your AI thinks. You rep.**
 
+![dependencies](https://img.shields.io/badge/dependencies-0-brightgreen)
+![blazingly](https://img.shields.io/badge/blazingly-local-blue)
+![gains](https://img.shields.io/badge/gains-unaudited-orange)
+![medical advice](https://img.shields.io/badge/medical%20advice-none-red)
+
 The dumbest local fitness tracker for people who wait for AI agents. Every prompt you send to Claude Code queues one tiny desk exercise, right in your terminal. Do it before the tokens finish streaming.
 
 ```text
@@ -19,6 +24,8 @@ The dumbest local fitness tracker for people who wait for AI agents. Every promp
 
   ✅ Shoulder rolls — 12 reps done! Today: 3 sets · 🔥 7-day streak · 412 total reps
 ```
+
+> "I did 412 shoulder rolls waiting for a refactor." — an engineer, probably
 
 Landing page: **https://token-fit-cdad0.web.app**
 
@@ -78,6 +85,20 @@ Hooks carry your prompts and your agent-usage rhythm. So the daemon binds to `12
 | `TOKENFIT_COOLDOWN_MS` | `600000` | minimum rest between exercises |
 | `TOKENFIT_LANG` | `en` | `ja` for Japanese terminal messages |
 | `TOKENFIT_HOOK_TIMEOUT_MS` | `900` | hook fail-fast budget |
+
+## FAQ
+
+**Is this a joke?** Yes.
+
+**Does it work?** Unfortunately.
+
+**Will it make me fit?** It will make you `/tf done`. The rest is between you and your chair.
+
+**Does my AI judge my skipped sets?** No. `/tf` never reaches the model. Your shame stays local, like your data.
+
+**Pricing?** Free. Pro tier: also free. Enterprise: please don't.
+
+**Can I turn it off?** `tokenfit uninstall claude-code --yes`. Your streak will miss you.
 
 ## Development
 

@@ -312,6 +312,35 @@
 
       .install .d { color: #8a8f9a; }
 
+      .install .pricing {
+        margin: 14px 0 0;
+        color: #8a8f9a;
+        font-size: 13.5px;
+      }
+
+      .quotes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+        margin-bottom: 64px;
+      }
+
+      .quote {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 18px 20px;
+        font-style: italic;
+        font-size: 15px;
+      }
+
+      .quote small {
+        display: block;
+        margin-top: 10px;
+        font-style: normal;
+        color: var(--muted);
+      }
+
       footer {
         color: var(--muted);
         font-size: 13.5px;
@@ -407,6 +436,13 @@
         </div>
       </div>
 
+      <h2>Totally real testimonials</h2>
+      <div class="quotes">
+        <div class="quote">“I did 412 shoulder rolls waiting for a refactor.”<small>— an engineer, probably</small></div>
+        <div class="quote">“My posture improved before my tests passed.”<small>— senior developer, allegedly</small></div>
+        <div class="quote">“Finally, a fitness app that respects my privacy and my delusions.”<small>— someone on the internet</small></div>
+      </div>
+
       <h2 id="install" style="position: relative;">Install</h2>
       <div class="install">
         <span class="soon">npm release coming soon</span>
@@ -417,6 +453,7 @@ npx tokenfit@latest init
 git clone https://github.com/mizkun/tokenfit.git
 cd tokenfit &amp;&amp; npm start
 node ./bin/tokenfit.mjs install claude-code --yes</pre>
+        <p class="pricing">Pricing: free · Pro: also free · Enterprise: please don't</p>
       </div>
 
       <footer>
