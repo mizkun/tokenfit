@@ -77,6 +77,14 @@ describe('parseTfCommand', () => {
   it('maps unknown subcommands to help', () => {
     assert.equal(parseTfCommand('/tf wat').cmd, 'help');
   });
+
+  it('parses settings subcommands', () => {
+    assert.equal(parseTfCommand('/tf on').cmd, 'on');
+    assert.equal(parseTfCommand('/tf off').cmd, 'off');
+    assert.deepEqual(parseTfCommand('/tf lang ja'), { cmd: 'lang', args: ['ja'] });
+    assert.deepEqual(parseTfCommand('/tf ja'), { cmd: 'lang', args: ['ja'] });
+    assert.deepEqual(parseTfCommand('/tf en'), { cmd: 'lang', args: ['en'] });
+  });
 });
 
 describe('share text', () => {
@@ -295,6 +303,76 @@ describe('/tf how', () => {
 
     assert.equal(output.decision, 'block');
     assert.doesNotMatch(output.reason, /1\. /);
+  });
+});
+
+describe('/tf lang and /tf on-off', () => {
+  const JAPANESE = /[ぁ-んァ-ヶー一-龯]/;
+  let server;
+  let baseUrl;
+  const openUrl = async () => {};
+
+  before(async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'tokenfit-settings-test-'));
+    ({ server } = createTokenFitServer({
+      dataFile: join(dir, 'tokenfit.json'),
+      publicDir: join(process.cwd(), 'public'),
+      cooldownMs: 0
+    }));
+    await new Promise((resolve) => {
+      server.listen(0, '127.0.0.1', () => {
+        baseUrl = `http://127.0.0.1:${server.address().port}`;
+        resolve();
+      });
+    });
+  });
+
+  after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+  });
+
+  it('switches the daemon language with /tf lang ja', async () => {
+    const output = await handlePromptSubmit({ prompt: '/tf lang ja' }, { baseUrl, openUrl });
+
+    assert.equal(output.decision, 'block');
+    assert.match(output.reason, JAPANESE);
+  });
+
+  it('issues in Japanese afterwards, without env vars or options', async () => {
+    const output = await handlePromptSubmit({ prompt: 'work' }, { baseUrl, openUrl });
+
+    assert.ok(output.systemMessage);
+    assert.match(output.systemMessage, JAPANESE);
+  });
+
+  it('/tf off silences issuing entirely', async () => {
+    await handlePromptSubmit({ prompt: '/tf skip' }, { baseUrl, openUrl });
+    const off = await handlePromptSubmit({ prompt: '/tf off' }, { baseUrl, openUrl });
+    assert.equal(off.decision, 'block');
+
+    const silent = await handlePromptSubmit({ prompt: 'more work' }, { baseUrl, openUrl });
+    assert.equal(silent, null);
+  });
+
+  it('status shows the paused state', async () => {
+    const output = await handlePromptSubmit({ prompt: '/tf' }, { baseUrl, openUrl });
+
+    assert.equal(output.decision, 'block');
+    assert.match(output.reason, /🛑/);
+  });
+
+  it('/tf on resumes issuing', async () => {
+    await handlePromptSubmit({ prompt: '/tf on' }, { baseUrl, openUrl });
+    const output = await handlePromptSubmit({ prompt: 'back to work' }, { baseUrl, openUrl });
+
+    assert.ok(output.systemMessage);
+  });
+
+  it('switches back to English with /tf en', async () => {
+    await handlePromptSubmit({ prompt: '/tf en' }, { baseUrl, openUrl });
+    const output = await handlePromptSubmit({ prompt: '/tf' }, { baseUrl, openUrl });
+
+    assert.doesNotMatch(output.reason, JAPANESE);
   });
 });
 
