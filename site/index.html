@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>TokenFit — Your AI thinks. You rep.</title>
+    <meta name="description" content="The dumbest local fitness tracker for people who wait for AI agents. One tiny desk exercise per prompt, right in your terminal.">
+    <meta property="og:title" content="TokenFit — Your AI thinks. You rep.">
+    <meta property="og:description" content="The dumbest local fitness tracker for people who wait for AI agents.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://token-fit-cdad0.web.app">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🏋️</text></svg>">
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #191a1f;
+        --muted: #626873;
+        --paper: #f7f3ea;
+        --panel: #fffdf7;
+        --iron: #26282e;
+        --green: #1f8a5b;
+        --coral: #e45d42;
+        --yellow: #f2c14e;
+        --line: rgba(25, 26, 31, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(1200px 500px at 80% -10%, rgba(242, 193, 78, 0.18), transparent 60%),
+          radial-gradient(900px 420px at 5% 10%, rgba(31, 138, 91, 0.10), transparent 55%),
+          var(--paper);
+        color: var(--ink);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        line-height: 1.6;
+      }
+
+      main {
+        max-width: 880px;
+        margin: 0 auto;
+        padding: 48px 20px 80px;
+      }
+
+      .eyebrow {
+        display: inline-block;
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 0.22em;
+        text-transform: uppercase;
+        color: var(--green);
+        border: 1.5px solid var(--green);
+        border-radius: 999px;
+        padding: 4px 14px;
+        margin: 0 0 20px;
+      }
+
+      h1 {
+        font-size: clamp(40px, 8vw, 68px);
+        line-height: 1.05;
+        letter-spacing: -0.02em;
+        margin: 0 0 16px;
+      }
+
+      h1 em {
+        font-style: normal;
+        color: var(--coral);
+      }
+
+      .tagline {
+        font-size: clamp(17px, 2.5vw, 20px);
+        color: var(--muted);
+        max-width: 34em;
+        margin: 0 0 28px;
+      }
+
+      .cta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 56px;
+      }
+
+      .button {
+        display: inline-block;
+        font-weight: 700;
+        text-decoration: none;
+        border-radius: 12px;
+        padding: 12px 22px;
+        border: 2px solid var(--iron);
+        transition: transform 0.08s ease;
+      }
+
+      .button:active {
+        transform: translateY(2px);
+      }
+
+      .button.primary {
+        background: var(--iron);
+        color: var(--paper);
+        box-shadow: 4px 4px 0 rgba(25, 26, 31, 0.25);
+      }
+
+      .button.ghost {
+        color: var(--iron);
+        background: transparent;
+      }
+
+      .terminal {
+        background: #17181c;
+        border-radius: 14px;
+        border: 1px solid rgba(0, 0, 0, 0.4);
+        box-shadow: 0 18px 40px rgba(25, 26, 31, 0.22);
+        overflow: hidden;
+        margin-bottom: 64px;
+      }
+
+      .terminal-bar {
+        display: flex;
+        align-items: center;
+        gap: 7px;
+        padding: 11px 14px;
+        background: #202127;
+      }
+
+      .terminal-bar i {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: #3a3c44;
+      }
+
+      .terminal-bar i:nth-child(1) { background: #e45d42; }
+      .terminal-bar i:nth-child(2) { background: #f2c14e; }
+      .terminal-bar i:nth-child(3) { background: #1f8a5b; }
+
+      .terminal-bar span {
+        margin-left: 8px;
+        color: #8a8f9a;
+        font-size: 12.5px;
+        font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      .terminal pre {
+        margin: 0;
+        padding: 20px 22px 24px;
+        overflow-x: auto;
+        font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 13.5px;
+        line-height: 1.75;
+        color: #d7dae0;
+      }
+
+      .terminal .p { color: #8fd3b2; }
+      .terminal .c { color: #f2c14e; }
+      .terminal .d { color: #7a8090; }
+      .terminal .ok { color: #8fd3b2; font-weight: 600; }
+
+      h2 {
+        font-size: clamp(24px, 4vw, 32px);
+        letter-spacing: -0.01em;
+        margin: 0 0 22px;
+      }
+
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+        margin-bottom: 64px;
+      }
+
+      .step {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        padding: 20px;
+      }
+
+      .step b {
+        display: block;
+        font-size: 28px;
+        color: var(--coral);
+        margin-bottom: 6px;
+      }
+
+      .step h3 {
+        margin: 0 0 6px;
+        font-size: 17px;
+      }
+
+      .step p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14.5px;
+      }
+
+      .commands {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        overflow: hidden;
+        margin-bottom: 64px;
+        font-size: 15px;
+      }
+
+      .commands th,
+      .commands td {
+        text-align: left;
+        padding: 12px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .commands tr:last-child td {
+        border-bottom: none;
+      }
+
+      .commands th {
+        background: rgba(31, 138, 91, 0.08);
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--green);
+      }
+
+      .commands code {
+        font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+        background: rgba(25, 26, 31, 0.06);
+        border-radius: 6px;
+        padding: 2px 8px;
+        white-space: nowrap;
+      }
+
+      .table-scroll {
+        overflow-x: auto;
+        margin-bottom: 64px;
+      }
+
+      .table-scroll .commands {
+        margin-bottom: 0;
+      }
+
+      .pillars {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 14px;
+        margin-bottom: 64px;
+      }
+
+      .pillar {
+        border-left: 4px solid var(--green);
+        background: var(--panel);
+        border-radius: 0 14px 14px 0;
+        padding: 18px 20px;
+      }
+
+      .pillar:nth-child(2) { border-left-color: var(--coral); }
+      .pillar:nth-child(3) { border-left-color: var(--yellow); }
+
+      .pillar h3 {
+        margin: 0 0 6px;
+        font-size: 17px;
+      }
+
+      .pillar p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14.5px;
+      }
+
+      .install {
+        background: var(--iron);
+        color: var(--paper);
+        border-radius: 14px;
+        padding: 26px 26px 22px;
+        margin-bottom: 64px;
+      }
+
+      .install h2 {
+        color: var(--paper);
+        margin-bottom: 6px;
+      }
+
+      .install .soon {
+        display: inline-block;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--yellow);
+        border: 1px solid var(--yellow);
+        border-radius: 999px;
+        padding: 2px 10px;
+        margin-bottom: 14px;
+      }
+
+      .install pre {
+        margin: 0;
+        padding: 16px 18px;
+        background: rgba(0, 0, 0, 0.35);
+        border-radius: 10px;
+        overflow-x: auto;
+        font-family: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 14px;
+        line-height: 1.9;
+      }
+
+      .install .d { color: #8a8f9a; }
+
+      footer {
+        color: var(--muted);
+        font-size: 13.5px;
+        border-top: 1px solid var(--line);
+        padding-top: 22px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px 24px;
+        justify-content: space-between;
+      }
+
+      footer a {
+        color: var(--green);
+        font-weight: 600;
+        text-decoration: none;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">TokenFit</p>
+      <h1>Your AI thinks.<br><em>You rep.</em></h1>
+      <p class="tagline">The dumbest local fitness tracker for people who wait for AI agents. Every prompt queues one tiny desk exercise, right in your terminal. Do it before the tokens finish streaming.</p>
+      <div class="cta-row">
+        <a class="button primary" href="#install">Install</a>
+        <a class="button ghost" href="#how">How it works</a>
+      </div>
+
+      <div class="terminal" aria-label="Terminal demo">
+        <div class="terminal-bar"><i></i><i></i><i></i><span>claude — ~/my-project</span></div>
+        <pre><span class="p">&gt;</span> refactor the parser and fix the tests
+
+  <span class="c">🏋️ Shoulder rolls — 12 reps (Shoulders) — Big circles, unclench jaw. → /tf done when finished</span>
+
+  <span class="d">⏺ Claude is thinking… (this is your set window)</span>
+
+<span class="p">&gt;</span> /tf done
+
+  <span class="ok">✅ Shoulder rolls — 12 reps done! Today: 3 sets · 🔥 7-day streak · 412 total reps</span></pre>
+      </div>
+
+      <h2 id="how">How it works</h2>
+      <div class="steps">
+        <div class="step">
+          <b>1</b>
+          <h3>You prompt your agent</h3>
+          <p>A Claude Code hook fires on every prompt you send. No app to open, no tab to babysit.</p>
+        </div>
+        <div class="step">
+          <b>2</b>
+          <h3>TokenFit drops an exercise</h3>
+          <p>One tiny desk exercise appears in your terminal. Ten-minute cooldown, never stacks up guilt.</p>
+        </div>
+        <div class="step">
+          <b>3</b>
+          <h3>Rep while it streams</h3>
+          <p>Type <strong>/tf done</strong> when you finish. It never reaches the model — zero tokens, zero judgment.</p>
+        </div>
+      </div>
+
+      <h2>The whole interface is <code style="font-family: ui-monospace, Menlo, monospace;">/tf</code></h2>
+      <div class="table-scroll">
+        <table class="commands">
+          <tr><th>Command</th><th>What happens</th></tr>
+          <tr><td><code>/tf</code></td><td>Current challenge and today's stats</td></tr>
+          <tr><td><code>/tf done</code></td><td>Log the set. Feel superior.</td></tr>
+          <tr><td><code>/tf skip</code></td><td>Skip it. We saw that.</td></tr>
+          <tr><td><code>/tf stats</code></td><td>Streak and all-time reps, in the terminal</td></tr>
+          <tr><td><code>/tf web</code></td><td>Open the local dashboard with your contribution-graph of gains</td></tr>
+          <tr><td><code>/tf x</code></td><td>Open X with your brag pre-filled</td></tr>
+        </table>
+      </div>
+
+      <h2>Built for paranoid engineers</h2>
+      <div class="pillars">
+        <div class="pillar">
+          <h3>Local-first</h3>
+          <p>The tracker runs on 127.0.0.1. Your prompts, hooks, and gains never leave your machine.</p>
+        </div>
+        <div class="pillar">
+          <h3>Zero tokens</h3>
+          <p><strong>/tf</strong> commands are intercepted by the hook before the model ever sees them. Free forever, even the bragging.</p>
+        </div>
+        <div class="pillar">
+          <h3>Actually tiny</h3>
+          <p>No dependencies. One Node process, one JSON file, ten desk exercises. A toy, not a platform.</p>
+        </div>
+      </div>
+
+      <h2 id="install" style="position: relative;">Install</h2>
+      <div class="install">
+        <span class="soon">npm release coming soon</span>
+        <pre><span class="d"># the intended one-liner</span>
+npx tokenfit@latest init
+
+<span class="d"># wires the Claude Code hook + /tf command, then</span>
+tokenfit start</pre>
+      </div>
+
+      <footer>
+        <span>TokenFit is a toy, not health advice. Stop if anything hurts.</span>
+        <a href="https://twitter.com/intent/tweet?text=Your%20AI%20thinks.%20You%20rep.%20%23TokenFit" target="_blank" rel="noopener noreferrer">Post #TokenFit</a>
+      </footer>
+    </main>
+  </body>
+</html>
