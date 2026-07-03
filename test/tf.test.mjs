@@ -232,11 +232,14 @@ describe('issue message includes the steps', () => {
     assert.match(output.systemMessage, /\/tf done/);
   });
 
-  it('keeps the pending reminder to a single line', async () => {
+  it('repeats the steps in the pending reminder too', async () => {
     const output = await handlePromptSubmit({ prompt: 'more work' }, { baseUrl, openUrl });
 
     assert.ok(output.systemMessage);
-    assert.doesNotMatch(output.systemMessage, /1\. /);
+    assert.match(output.systemMessage, /⏳/);
+    assert.match(output.systemMessage, /1\. /);
+    assert.match(output.systemMessage, /2\. /);
+    assert.match(output.systemMessage, /\/tf done/);
   });
 });
 
