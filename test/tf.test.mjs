@@ -200,6 +200,46 @@ describe('handlePromptSubmit', () => {
   });
 });
 
+describe('issue message includes the steps', () => {
+  let server;
+  let baseUrl;
+  const openUrl = async () => {};
+
+  before(async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'tokenfit-issue-test-'));
+    ({ server } = createTokenFitServer({
+      dataFile: join(dir, 'tokenfit.json'),
+      publicDir: join(process.cwd(), 'public')
+    }));
+    await new Promise((resolve) => {
+      server.listen(0, '127.0.0.1', () => {
+        baseUrl = `http://127.0.0.1:${server.address().port}`;
+        resolve();
+      });
+    });
+  });
+
+  after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+  });
+
+  it('shows numbered steps right when a challenge is issued', async () => {
+    const output = await handlePromptSubmit({ prompt: 'do the thing' }, { baseUrl, openUrl });
+
+    assert.ok(output.systemMessage);
+    assert.match(output.systemMessage, /1\. /);
+    assert.match(output.systemMessage, /2\. /);
+    assert.match(output.systemMessage, /\/tf done/);
+  });
+
+  it('keeps the pending reminder to a single line', async () => {
+    const output = await handlePromptSubmit({ prompt: 'more work' }, { baseUrl, openUrl });
+
+    assert.ok(output.systemMessage);
+    assert.doesNotMatch(output.systemMessage, /1\. /);
+  });
+});
+
 describe('/tf how', () => {
   let server;
   let baseUrl;
