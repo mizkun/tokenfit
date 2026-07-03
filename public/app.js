@@ -39,7 +39,8 @@ const COPY = {
     share: (stats) => [
       `I just did ${stats.totalReps} TokenFit reps while my AI was thinking.`,
       'Your AI thinks. You rep.',
-      '#TokenFit'
+      '#TokenFit',
+      'https://github.com/mizkun/tokenfit'
     ].join('\n')
   },
   ja: {
@@ -59,7 +60,8 @@ const COPY = {
     share: (stats) => [
       `AIが考えている間にTokenFitで${stats.totalReps} repsやった。`,
       'Your AI thinks. You rep.',
-      '#TokenFit'
+      '#TokenFit',
+      'https://github.com/mizkun/tokenfit'
     ].join('\n')
   }
 };
