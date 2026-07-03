@@ -28,6 +28,7 @@ A `UserPromptSubmit` hook fires on every prompt. TokenFit issues one exercise (1
 | `/tf` | current challenge and today's stats |
 | `/tf done` (`/tf d`) | mark it done |
 | `/tf skip` (`/tf s`) | skip it — we saw that |
+| `/tf how` | step-by-step instructions for the current exercise |
 | `/tf stats` | text stats in the terminal |
 | `/tf web` | open the local dashboard (contribution graph of gains) |
 | `/tf x` | open X with a pre-filled brag post |
