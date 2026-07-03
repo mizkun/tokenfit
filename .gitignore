@@ -4,3 +4,5 @@ data/
 .claude/settings.local.json
 .DS_Store
 *.log
+*.mp4
+*.gif
