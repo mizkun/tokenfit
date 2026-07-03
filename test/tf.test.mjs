@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
-import { mkdtemp } from 'node:fs/promises';
+import http from 'node:http';
+import { mkdir, mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { after, before, describe, it } from 'node:test';
@@ -303,6 +304,78 @@ describe('/tf how', () => {
 
     assert.equal(output.decision, 'block');
     assert.doesNotMatch(output.reason, /1\. /);
+  });
+});
+
+describe('static file safety', () => {
+  let server;
+  let baseUrl;
+
+  before(async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'tokenfit-static-test-'));
+    await mkdir(join(dir, 'sub'));
+    await writeFile(join(dir, 'index.html'), 'hello');
+    ({ server } = createTokenFitServer({
+      dataFile: join(dir, 'tokenfit.json'),
+      publicDir: dir
+    }));
+    await new Promise((resolve) => {
+      server.listen(0, '127.0.0.1', () => {
+        baseUrl = `http://127.0.0.1:${server.address().port}`;
+        resolve();
+      });
+    });
+  });
+
+  after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+  });
+
+  it('returns 404 for a directory instead of crashing', async () => {
+    const response = await fetch(`${baseUrl}/sub`);
+    assert.equal(response.status, 404);
+
+    const alive = await fetch(`${baseUrl}/`);
+    assert.equal(alive.status, 200);
+  });
+});
+
+describe('graceful failure against an outdated daemon', () => {
+  let server;
+  let baseUrl;
+  const openUrl = async () => {};
+
+  before(async () => {
+    server = http.createServer((request, response) => {
+      response.writeHead(404, { 'content-type': 'application/json' });
+      response.end(JSON.stringify({ error: 'Not found' }));
+    });
+    await new Promise((resolve) => {
+      server.listen(0, '127.0.0.1', () => {
+        baseUrl = `http://127.0.0.1:${server.address().port}`;
+        resolve();
+      });
+    });
+  });
+
+  after(async () => {
+    await new Promise((resolve) => server.close(resolve));
+  });
+
+  it('/tf off explains instead of pretending success', async () => {
+    const output = await handlePromptSubmit({ prompt: '/tf off' }, { baseUrl, openUrl });
+
+    assert.equal(output.decision, 'block');
+    assert.doesNotMatch(output.reason, /paused|couch|停止/i);
+    assert.match(output.reason, /tokenfit start/);
+  });
+
+  it('/tf lang ja explains instead of pretending success', async () => {
+    const output = await handlePromptSubmit({ prompt: '/tf ja' }, { baseUrl, openUrl });
+
+    assert.equal(output.decision, 'block');
+    assert.doesNotMatch(output.reason, /切り替えた/);
+    assert.match(output.reason, /tokenfit start/);
   });
 });
 
